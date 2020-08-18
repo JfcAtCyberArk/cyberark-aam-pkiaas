@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/infamousjoeg/cyberark-aam-pkiaas/internal/backend"
@@ -266,6 +268,16 @@ func defaultConjurClient() (*conjurapi.Client, error) {
 		fmt.Printf("Failed to init config from environment variables. %s", err.Error())
 		return nil, fmt.Errorf("Failed to init config from environment variables. %s", err)
 	}
+
+	retrieveCert := strings.ToLower(os.Getenv("CONJUR_TRUST_SSL_CERTIFICATE"))
+	if retrieveCert == "yes" || retrieveCert == "true" {
+		pem, err := getPem(config.ApplianceURL)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to retrieve Conjur appliance certificate. %s", err)
+		}
+		config.SSLCert = pem
+	}
+
 	client, err := conjurapi.NewClientFromEnvironment(config)
 	if err != nil {
 		fmt.Printf("Failed to init client from config. %s", err.Error())
