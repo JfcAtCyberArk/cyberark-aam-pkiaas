@@ -1,6 +1,8 @@
 package conjur
 
 import (
+	"crypto/tls"
+	"encoding/pem"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -174,4 +176,32 @@ func GetAnnotationValue(resource map[string]interface{}, key string) (string, er
 	}
 
 	return value, nil
+}
+
+func getPem(url string) (string, error) {
+	conf := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	// trim https://
+	url = strings.TrimLeft(url, "https://")
+	// If no port is provide default to port 443
+	if !strings.Contains(url, ":") {
+		url = url + ":443"
+	}
+
+	conn, err := tls.Dial("tcp", url, conf)
+	if err != nil {
+		return "", fmt.Errorf("Failed to retrieve certificate from '%s'. %s", url, err)
+	}
+	defer conn.Close()
+
+	if len(conn.ConnectionState().PeerCertificates) != 2 {
+		return "", fmt.Errorf("Invalid Conjur url '%s'. Make sure hostname and port are correct", url)
+	}
+	pemCert := string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: conn.ConnectionState().PeerCertificates[0].Raw}))
+	secondPemCert := string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: conn.ConnectionState().PeerCertificates[1].Raw}))
+	pemCert = pemCert + secondPemCert
+
+	return pemCert, err
 }
