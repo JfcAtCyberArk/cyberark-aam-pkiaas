@@ -271,6 +271,7 @@ func defaultConjurClient() (*conjurapi.Client, error) {
 
 	retrieveCert := strings.ToLower(os.Getenv("CONJUR_TRUST_SSL_CERTIFICATE"))
 	if retrieveCert == "yes" || retrieveCert == "true" {
+		log.Debug("CONJUR_TRUST_SSL_CERTIFICATE set to '%s'", retrieveCert)
 		pem, err := getPem(config.ApplianceURL)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to retrieve Conjur appliance certificate. %s", err)
