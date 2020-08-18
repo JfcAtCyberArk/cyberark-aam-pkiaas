@@ -7,6 +7,7 @@ import (
 
 	"github.com/infamousjoeg/cyberark-aam-pkiaas/internal/backend"
 	"github.com/infamousjoeg/cyberark-aam-pkiaas/internal/backend/conjur"
+	"github.com/infamousjoeg/cyberark-aam-pkiaas/pkg/log"
 	"github.com/infamousjoeg/cyberark-aam-pkiaas/pkg/pkiaas"
 )
 
@@ -14,6 +15,7 @@ var storage backend.Storage
 
 func init() {
 	version := flag.Bool("v", false, "Display current version")
+	debug := flag.Bool("debug", false, "Enable debug log level")
 
 	flag.Parse()
 
@@ -21,6 +23,11 @@ func init() {
 	if *version {
 		fmt.Printf("pkiaas v%s\n", pkiaas.FullVersionName)
 		os.Exit(1)
+	}
+
+	// -debug flag detected
+	if *debug {
+		log.EnableDebugMode()
 	}
 
 	pkiclient, err := conjur.NewFromDefaults()
@@ -34,5 +41,4 @@ func init() {
 	}
 
 	storage = pkiclient
-
 }
